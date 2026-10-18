@@ -151,6 +151,10 @@ export default function Authenticated({
                         )}
                     </div>
                 ))}
+                <a href="/index.html" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <span className="material-symbols-outlined">sports_esports</span>
+                    Main Catur
+                </a>
             </nav>
 
             <div className="p-4 mt-auto border-t border-gray-200 dark:border-gray-700">
@@ -249,6 +253,7 @@ export default function Authenticated({
                             </Link>
                         ) : (
                             <div className="flex gap-2">
+                                <a href="/index.html" className="px-4 py-2 text-sm font-medium text-emerald-700 hover:text-emerald-600">Catur</a>
                                 <Link href={route('login')} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Masuk</Link>
                                 <Link href={route('register')} className="hidden sm:inline-block px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-sky-600 transition-colors">Daftar</Link>
                             </div>

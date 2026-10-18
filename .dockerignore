@@ -1,0 +1,17 @@
+/.env
+/.env.*
+!/.env.example
+/.git
+/.github
+/.idea
+/.vscode
+/node_modules
+/vendor
+/public/build
+/public/sw.js
+/public/workbox-*.js
+/public/chess-engine.js
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*

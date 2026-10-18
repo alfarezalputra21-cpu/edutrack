@@ -63,6 +63,20 @@ Setelah menjalankan seeding, Anda dapat masuk menggunakan akun berikut:
 -   **Email**: `siswa@edutrack.com`
 -   **Password**: `password`
 
+## Deploy Demo Gratis
+
+EduTrack menggunakan Laravel 13, PHP 8.3, dan migrasi MySQL. Konfigurasi deploy tersedia untuk Render; database demo menggunakan MySQL Free dari Aiven.
+
+1. Buat layanan MySQL Free di [Aiven](https://aiven.io/). Catat host, port, nama database, username, password, lalu unduh CA certificate.
+2. Push branch `deploy/latest` ke fork GitHub. Jangan commit `.env`, password, atau file sertifikat.
+3. Di [Render](https://render.com/), pilih **New > Blueprint** dan hubungkan fork pada branch `deploy/latest`.
+4. Pada Environment service Render, isi `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` dari Aiven. URL aplikasi diambil otomatis dari Render.
+5. Tambahkan Secret File bernama `aiven-ca.pem` di Render dengan isi CA certificate Aiven. `MYSQL_ATTR_SSL_CA` sudah diarahkan ke `/etc/secrets/aiven-ca.pem`.
+6. Tunggu deploy dan migrasi selesai. EduTrack dibuka di root URL; game catur tersedia pada `/index.html`.
+7. Masukkan URL HTTPS Render ke [PWABuilder](https://www.pwabuilder.com/) untuk membuat paket Android.
+
+Paket gratis ditujukan untuk demo: Render dapat menidurkan service saat idle; layanan Aiven Free memiliki batas sumber daya dan dapat dinonaktifkan jika tidak digunakan lama. Jangan pakai untuk data penting tanpa backup.
+
 ## Struktur Data
 
 - **Models**:

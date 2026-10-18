@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#315d4b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./logo.png" type="image/png">
+    <title>Rook &amp; Rule | Catur</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #202923;
+            --muted: #68736b;
+            --paper: #f7f8f4;
+            --line: #dce2da;
+            --green: #315d4b;
+            --green-dark: #244a3a;
+            --lime: #d8ef78;
+            --coral: #e8755e;
+            --board-light: #f0eadb;
+            --board-dark: #648b72;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-width: 320px;
+            min-height: 100vh;
+            color: var(--ink);
+            background-color: #e9eee8;
+            background-image: radial-gradient(#cbd5ca 0.7px, transparent 0.7px);
+            background-size: 18px 18px;
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        }
+        button { font: inherit; }
+        .page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0 42px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+        .top-meta { text-align: right; }
+        .creator-credit { margin-top: 7px; color: var(--green-dark); font-size: 15px; font-weight: 800; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark { display: grid; grid-template-columns: repeat(2, 10px); gap: 3px; padding: 8px; border-radius: 9px; background: var(--green); }
+        .brand-mark i { width: 10px; height: 10px; border-radius: 2px; background: var(--lime); }
+        .brand-mark i:nth-child(2), .brand-mark i:nth-child(3) { background: #f7f8f4; }
+        .brand-name { font-family: Georgia, serif; font-size: 21px; font-weight: 700; letter-spacing: 0; }
+        .brand-caption { margin-top: 2px; color: var(--muted); font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; }
+        .top-label { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+        .game-layout { display: grid; grid-template-columns: minmax(0, 690px) minmax(260px, 1fr); align-items: start; gap: 26px; }
+        .board-panel, .side-panel { border: 1px solid rgba(32, 41, 35, .08); border-radius: 14px; background: var(--paper); box-shadow: 0 16px 44px rgba(33, 51, 39, .08); }
+        .board-panel { padding: 22px; }
+        .player-line { display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 2px 12px; }
+        .player-line.bottom { padding: 12px 2px 0; }
+        .player-name { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; }
+        .player-dot { width: 11px; height: 11px; border: 2px solid var(--green); border-radius: 50%; background: #fff; }
+        .player-dot.dark { background: #26352d; border-color: #26352d; }
+        .player-state { color: var(--muted); font-size: 11px; }
+        .board-frame { padding: 7px; border-radius: 9px; background: #263d31; box-shadow: 0 7px 0 #1c3026; }
+        .board { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 3px; }
+        .square { position: relative; display: grid; place-items: center; min-width: 0; padding: 0; border: 0; border-radius: 0; cursor: pointer; }
+        .square.light { background: var(--board-light); }
+        .square.dark { background: var(--board-dark); }
+        .square:focus-visible { z-index: 2; outline: 3px solid var(--coral); outline-offset: -3px; }
+        .square.selected { background-image: linear-gradient(rgba(216, 239, 120, .64), rgba(216, 239, 120, .64)); }
+        .square.last-move { background-image: linear-gradient(rgba(226, 225, 128, .43), rgba(226, 225, 128, .43)); }
+        .piece { position: relative; z-index: 1; font-family: "DejaVu Sans", "Segoe UI Symbol", serif; font-size: clamp(27px, 6.5vw, 62px); line-height: 1; user-select: none; }
+        .piece.white { color: #fffdf6; text-shadow: 0 2px 1px #33473b, 0 0 2px #26362d; }
+        .piece.black { color: #24362c; text-shadow: 0 1px 0 rgba(255,255,255,.22); }
+        .square.legal::after { position: absolute; width: 22%; aspect-ratio: 1; border-radius: 50%; background: rgba(28, 45, 34, .34); content: ""; }
+        .square.capture::after { position: absolute; inset: 5%; border: 4px solid rgba(232, 117, 94, .82); border-radius: 50%; content: ""; }
+        .square.in-check { background-image: radial-gradient(circle, rgba(225, 87, 65, .82), rgba(225, 87, 65, .15) 70%); }
+        .coord { position: absolute; right: 4px; bottom: 2px; z-index: 2; color: rgba(26, 43, 32, .68); font-size: clamp(8px, 1.4vw, 11px); font-weight: 800; line-height: 1; pointer-events: none; }
+        .square.dark .coord { color: rgba(255, 255, 255, .8); }
+        .side-panel { padding: 23px; }
+        .eyebrow { color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+        h1 { margin: 9px 0 20px; font-family: Georgia, serif; font-size: 35px; line-height: 1.05; letter-spacing: 0; }
+        .turn-box { padding: 16px; border-radius: 10px; background: #edf2eb; }
+        .turn-label { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        #turnIndicator { display: flex; align-items: center; gap: 9px; margin-top: 9px; font-family: Georgia, serif; font-size: 21px; font-weight: 700; }
+        #turnIcon { display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid #bdc8bd; border-radius: 50%; background: #fff; font-family: "Segoe UI Symbol", serif; font-size: 19px; }
+        #gameStatus { min-height: 48px; margin: 16px 0 0; color: #48564c; font-size: 13px; line-height: 1.5; }
+        .divider { height: 1px; margin: 20px 0; background: var(--line); }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat { padding: 12px; border: 1px solid var(--line); border-radius: 9px; }
+        .stat-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+        .stat-value { margin-top: 6px; font-size: 18px; font-weight: 800; }
+        .rule-note { padding: 13px 14px; border-left: 3px solid var(--coral); border-radius: 0 7px 7px 0; background: #fbefeb; color: #5e4841; font-size: 12px; line-height: 1.45; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 19px; }
+        .action { min-height: 43px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 800; }
+        .action:hover { border-color: var(--green); background: #f0f5ec; }
+        .action.primary { border-color: var(--green); background: var(--green); color: white; }
+        .action.primary:hover { background: var(--green-dark); }
+        .keyboard-hint { margin-top: 17px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+        .history-heading { display: flex; justify-content: space-between; margin-bottom: 9px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+        .move-history { display: grid; gap: 3px; max-height: 190px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+        .move-history li { display: grid; grid-template-columns: 35px 1fr 1fr; gap: 8px; padding: 7px 8px; border-radius: 6px; font-size: 12px; }
+        .move-history li:nth-child(odd) { background: #edf2eb; }
+        .move-number { color: var(--muted); }
+        .move-history:empty::after { padding: 10px 0; color: var(--muted); content: "Belum ada langkah"; font-size: 12px; }
+        .action:disabled { cursor: not-allowed; opacity: .45; }
+        .promotion-dialog { width: min(360px, calc(100% - 28px)); padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); box-shadow: 0 22px 70px rgba(20, 35, 25, .3); }
+        .promotion-dialog::backdrop { background: rgba(24, 37, 29, .56); }
+        .promotion-dialog h2 { margin: 0 0 16px; font-family: Georgia, serif; font-size: 21px; letter-spacing: 0; }
+        .promotion-choices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .promotion-choice { display: grid; aspect-ratio: 1; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: white; cursor: pointer; font-family: "Segoe UI Symbol", serif; font-size: 36px; }
+        .promotion-choice:hover, .promotion-choice:focus-visible { border-color: var(--green); background: #edf2eb; }
+        @media (max-width: 820px) {
+            .page { width: min(620px, calc(100% - 24px)); padding-top: 18px; }
+            .game-layout { grid-template-columns: 1fr; gap: 15px; }
+            .board-panel { padding: 14px; }
+            .side-panel { padding: 19px; }
+            .topbar { margin-bottom: 17px; }
+            h1 { font-size: 30px; }
+        }
+        @media (max-width: 420px) {
+            .page { width: calc(100% - 16px); }
+            .board-panel { padding: 10px; }
+            .board-frame { padding: 4px; }
+            .side-panel { padding: 16px; }
+            .top-label { font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <div><div class="brand-name">Rook &amp; Rule</div><div class="brand-caption">Catur dua pemain</div></div>
+            </div>
+            <div class="top-meta">
+                <div class="top-label">Putih mulai lebih dulu</div>
+                <div class="creator-credit">by azka.Farizqie</div>
+            </div>
+        </header>
+        <div class="game-layout">
+            <section class="board-panel" aria-label="Papan permainan">
+                <div class="player-line">
+                    <div class="player-name"><span class="player-dot dark"></span> Hitam</div>
+                    <span class="player-state" id="blackState">Menunggu giliran</span>
+                </div>
+                <div class="board-frame"><div class="board" id="chessBoard" role="grid" aria-label="Papan catur"></div></div>
+                <div class="player-line bottom">
+                    <div class="player-name"><span class="player-dot"></span> Putih</div>
+                    <span class="player-state" id="whiteState">Giliran pertama</span>
+                </div>
+            </section>
+            <aside class="side-panel">
+                <div class="eyebrow">Meja permainan</div>
+                <h1>Siap melangkah?</h1>
+                <div class="turn-box">
+                    <div class="turn-label">Giliran saat ini</div>
+                    <div id="turnIndicator"><span id="turnIcon" aria-hidden="true">♙</span><span id="turnName">Putih</span></div>
+                    <p id="gameStatus" role="status" aria-live="polite">Pilih bidak putih untuk melihat langkah legal.</p>
+                </div>
+                <div class="divider"></div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-label">Langkah</div><div class="stat-value" id="moveCount">0</div></div>
+                    <div class="stat"><div class="stat-label">Kondisi</div><div class="stat-value" id="gameState">Berjalan</div></div>
+                </div>
+                <div class="divider"></div>
+                <div class="rule-note"><strong>Aturan catur standar:</strong> skakmat memenangkan permainan; remis mengikuti aturan FIDE.</div>
+                <div class="actions">
+                    <button class="action primary" id="newGame" type="button">Mulai ulang</button>
+                    <button class="action" id="flipBoard" type="button">Balik papan</button>
+                    <button class="action" id="undoMove" type="button" disabled>Batalkan langkah</button>
+                    <button class="action" id="claimDraw" type="button" disabled>Klaim remis</button>
+                </div>
+                <div class="divider"></div>
+                <div class="history-heading"><span>Riwayat langkah</span><span id="moveTotal">0</span></div>
+                <ol class="move-history" id="moveHistory" aria-live="polite"></ol>
+                <p class="keyboard-hint">Pilih bidak untuk melihat langkah legal, lalu pilih kotak tujuan.</p>
+            </aside>
+        </div>
+    </main>
+    <dialog class="promotion-dialog" id="promotionDialog" aria-labelledby="promotionTitle">
+        <h2 id="promotionTitle">Pilih promosi pion</h2>
+        <div class="promotion-choices" id="promotionChoices"></div>
+    </dialog>
+    <script src="./chess-engine.js"></script>
+    <script>
+const game = new ChessEngine.Chess();
+const pieceSymbols = {
+    wk: '♔', wq: '♕', wr: '♖', wb: '♗', wn: '♘', wp: '♙',
+    bk: '♚', bq: '♛', br: '♜', bb: '♝', bn: '♞', bp: '♟'
+};
+const pieceNames = { k: 'raja', q: 'ratu', r: 'benteng', b: 'gajah', n: 'kuda', p: 'pion' };
+let selectedSquare = null;
+let validMoves = [];
+let isGameOver = false;
+let flipped = false;
+let lastMove = null;
+let pendingPromotion = null;
+let positionCounts = new Map([[game.hash(), 1]]);
+
+function handleSquareClick(r, c) {
+    if (isGameOver) return;
+
+    const square = `${String.fromCharCode(97 + c)}${8 - r}`;
+    const piece = game.get(square);
+
+    if (selectedSquare) {
+        const moveCandidates = validMoves.filter(move => move.to === square);
+        if (moveCandidates.length) {
+            if (moveCandidates.some(move => move.promotion)) {
+                showPromotionChoices(selectedSquare, square);
+                return;
+            }
+            executeMove(selectedSquare, square);
+            return;
+        }
+    }
+
+    if (piece && piece.color === game.turn()) {
+        selectedSquare = square;
+        validMoves = game.moves({ square, verbose: true });
+    } else {
+        selectedSquare = null;
+        validMoves = [];
+    }
+    renderPieces();
+}
+
+function showPromotionChoices(from, to) {
+    pendingPromotion = { from, to };
+    const choices = document.getElementById('promotionChoices');
+    choices.replaceChildren();
+    const color = game.turn();
+    ['q', 'r', 'b', 'n'].forEach(type => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'promotion-choice';
+        button.textContent = pieceSymbols[`${color}${type}`];
+        button.setAttribute('aria-label', `Promosikan menjadi ${pieceNames[type]}`);
+        button.addEventListener('click', () => {
+            executeMove(pendingPromotion.from, pendingPromotion.to, type);
+            pendingPromotion = null;
+            document.getElementById('promotionDialog').close();
+        });
+        choices.append(button);
+    });
+    document.getElementById('promotionDialog').showModal();
+}
+
+function executeMove(from, to, promotion) {
+    const move = game.move({ from, to, ...(promotion ? { promotion } : {}) });
+    lastMove = { from: move.from, to: move.to };
+    const positionHash = game.hash();
+    positionCounts.set(positionHash, (positionCounts.get(positionHash) || 0) + 1);
+    selectedSquare = null;
+    validMoves = [];
+    updateGameStatus();
+    renderPieces();
+}
+
+function automaticDrawReason() {
+    if (game.isCheckmate()) return null;
+    if (game.isStalemate()) return 'Pat. Permainan berakhir remis.';
+    if (game.isInsufficientMaterial()) return 'Materi tidak cukup untuk skakmat. Permainan remis.';
+    if ((positionCounts.get(game.hash()) || 0) >= 5) return 'Posisi yang sama terjadi lima kali. Permainan remis.';
+    if (Number(game.fen().split(' ')[4]) >= 150) return 'Aturan 75 langkah tercapai. Permainan remis.';
+    return null;
+}
+
+function updateGameStatus(claimedDraw = false) {
+    const status = document.getElementById('gameStatus');
+    const state = document.getElementById('gameState');
+    const drawButton = document.getElementById('claimDraw');
+    const automaticDraw = automaticDrawReason();
+    const isCheckmate = game.isCheckmate();
+    const canClaimDraw = game.isThreefoldRepetition() || game.isDrawByFiftyMoves();
+
+    updateTurnDisplay();
+    document.getElementById('moveCount').innerText = game.history().length;
+    document.getElementById('moveTotal').innerText = `${game.history().length} ply`;
+    document.getElementById('undoMove').disabled = game.history().length === 0;
+    drawButton.disabled = !canClaimDraw || isGameOver || claimedDraw || Boolean(automaticDraw) || isCheckmate;
+
+    if (isCheckmate) {
+        isGameOver = true;
+        state.innerText = 'Skakmat';
+        status.innerText = `Skakmat. Tim ${game.turn() === 'w' ? 'Hitam' : 'Putih'} menang.`;
+    } else if (automaticDraw) {
+        isGameOver = true;
+        state.innerText = 'Remis';
+        status.innerText = automaticDraw;
+    } else if (claimedDraw) {
+        isGameOver = true;
+        state.innerText = 'Remis';
+        status.innerText = 'Klaim remis diterima.';
+    } else if (isGameOver) {
+        state.innerText = 'Remis';
+    } else if (game.isCheck()) {
+        state.innerText = 'Skak';
+        status.innerText = `Skak! Tim ${game.turn() === 'w' ? 'Putih' : 'Hitam'} harus melindungi rajanya.`;
+    } else {
+        state.innerText = 'Berjalan';
+        status.innerText = `Giliran Tim ${game.turn() === 'w' ? 'Putih' : 'Hitam'}.`;
+    }
+    renderHistory();
+}
+
+function updateTurnDisplay() {
+    const isWhiteTurn = game.turn() === 'w';
+    document.getElementById('turnName').innerText = isWhiteTurn ? 'Putih' : 'Hitam';
+    document.getElementById('turnIcon').innerText = isWhiteTurn ? '♙' : '♟';
+    document.getElementById('whiteState').innerText = isWhiteTurn ? 'Sedang melangkah' : 'Menunggu giliran';
+    document.getElementById('blackState').innerText = isWhiteTurn ? 'Menunggu giliran' : 'Sedang melangkah';
+}
+
+function renderHistory() {
+    const history = game.history();
+    const list = document.getElementById('moveHistory');
+    list.replaceChildren();
+    for (let index = 0; index < history.length; index += 2) {
+        const row = document.createElement('li');
+        const number = document.createElement('span');
+        const whiteMove = document.createElement('span');
+        const blackMove = document.createElement('span');
+        number.className = 'move-number';
+        number.textContent = `${Math.floor(index / 2) + 1}.`;
+        whiteMove.textContent = history[index];
+        blackMove.textContent = history[index + 1] || '';
+        row.append(number, whiteMove, blackMove);
+        list.append(row);
+    }
+    list.scrollTop = list.scrollHeight;
+}
+
+function renderPieces() {
+    const chessBoard = document.getElementById('chessBoard');
+    const board = game.board();
+    const checkedKing = game.isCheck() ? game.board().flat().find(piece => piece?.type === 'k' && piece.color === game.turn()) : null;
+    chessBoard.replaceChildren();
+
+    for (let displayRow = 0; displayRow < 8; displayRow++) {
+        for (let displayCol = 0; displayCol < 8; displayCol++) {
+            const r = flipped ? 7 - displayRow : displayRow;
+            const c = flipped ? 7 - displayCol : displayCol;
+            const piece = board[r][c];
+            const squareName = `${String.fromCharCode(97 + c)}${8 - r}`;
+            const square = document.createElement('button');
+            square.type = 'button';
+            square.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+            square.setAttribute('aria-label', `${squareName}${piece ? `, ${pieceNames[piece.type]}` : ''}`);
+            square.dataset.square = squareName;
+            square.addEventListener('click', () => handleSquareClick(r, c));
+
+            if (selectedSquare === squareName) square.classList.add('selected');
+            if (lastMove && (lastMove.from === squareName || lastMove.to === squareName)) square.classList.add('last-move');
+            if (validMoves.some(move => move.to === squareName)) square.classList.add(piece ? 'capture' : 'legal');
+            if (piece?.type === 'k' && checkedKing && piece.color === game.turn() &&
+                checkedKing.type === piece.type && checkedKing.color === piece.color) square.classList.add('in-check');
+
+            if (piece) {
+                const pieceElement = document.createElement('span');
+                pieceElement.className = `piece ${piece.color === 'w' ? 'white' : 'black'}`;
+                pieceElement.textContent = pieceSymbols[`${piece.color}${piece.type}`];
+                pieceElement.setAttribute('aria-hidden', 'true');
+                square.append(pieceElement);
+            }
+
+            if ((!flipped && c === 0) || (flipped && c === 7)) {
+                const rank = document.createElement('span');
+                rank.className = 'coord';
+                rank.textContent = 8 - r;
+                rank.setAttribute('aria-hidden', 'true');
+                square.append(rank);
+            }
+            if ((!flipped && r === 7) || (flipped && r === 0)) {
+                const file = document.createElement('span');
+                file.className = 'coord';
+                file.textContent = String.fromCharCode(97 + c);
+                file.setAttribute('aria-hidden', 'true');
+                square.append(file);
+            }
+            chessBoard.append(square);
+        }
+    }
+}
+
+function rebuildPositionCounts() {
+    positionCounts = new Map();
+    const history = game.history({ verbose: true });
+    const startingPosition = new ChessEngine.Chess();
+    positionCounts.set(startingPosition.hash(), 1);
+    history.forEach(move => {
+        const after = new ChessEngine.Chess(move.after);
+        positionCounts.set(after.hash(), (positionCounts.get(after.hash()) || 0) + 1);
+    });
+}
+
+function resetGame() {
+    game.reset();
+    selectedSquare = null;
+    validMoves = [];
+    isGameOver = false;
+    lastMove = null;
+    pendingPromotion = null;
+    positionCounts = new Map([[game.hash(), 1]]);
+    updateGameStatus();
+    renderPieces();
+}
+
+document.getElementById('newGame').addEventListener('click', resetGame);
+document.getElementById('flipBoard').addEventListener('click', () => {
+    flipped = !flipped;
+    renderPieces();
+});
+document.getElementById('undoMove').addEventListener('click', () => {
+    const move = game.undo();
+    if (!move) return;
+    isGameOver = false;
+    lastMove = game.history({ verbose: true }).at(-1) || null;
+    if (lastMove) lastMove = { from: lastMove.from, to: lastMove.to };
+    else lastMove = null;
+    selectedSquare = null;
+    validMoves = [];
+    rebuildPositionCounts();
+    updateGameStatus();
+    renderPieces();
+});
+document.getElementById('claimDraw').addEventListener('click', () => {
+    if (game.isThreefoldRepetition() || game.isDrawByFiftyMoves()) updateGameStatus(true);
+});
+document.getElementById('promotionDialog').addEventListener('cancel', () => {
+    pendingPromotion = null;
+    renderPieces();
+});
+
+updateGameStatus();
+renderPieces();
+    </script>
+    <script src="./pwa-register.js" defer></script>
+</body>
+</html>
